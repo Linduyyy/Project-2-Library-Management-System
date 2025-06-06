@@ -23,4 +23,182 @@ This project demonstrates the implementation of a Library Management System usin
 ![Screenshot 2025-06-05 160233](https://github.com/user-attachments/assets/1d692c0b-0800-4fde-ae27-40d1ce0d04b4)
 
 - **Database Creation**: Created a database named `project_2_library_db`
+- **Table Creation**: Created tables for branches, employees, members, books, issued status, and return status. Each table includes relevant columns and relationships.
+
+```SQL
+-- create table branch
+drop table if exists branch ;
+
+CREATE TABLE branch 
+(
+	branch_id varchar(10) primary key,	
+    manager_id	varchar(10),
+    branch_address	varchar(30),
+    contact_no varchar(15)
+);
+
+-- create table employees
+drop table if exists employees ;
+
+create table employees 
+(
+	emp_id	varchar(10) primary key,
+    emp_name varchar(30),
+    position varchar(30),
+    salary	decimal(10,2),
+    branch_id varchar(10)
+);
+
+
+-- create table members
+DROP TABLES IF EXISTS members;
+CREATE TABLE members 
+(
+	member_id VARCHAR(15) PRIMARY KEY,
+    member_name VARCHAR(30),
+    member_address VARCHAR(60),
+    reg_date DATE
+);
+
+-- create table books
+CREATE TABLE books 
+(
+	isbn VARCHAR(20) PRIMARY KEY,
+    book_title VARCHAR(60),
+    category VARCHAR(20),
+    rental_price FLOAT,
+	status VARCHAR(15),
+    author VARCHAR (35),
+    publisher VARCHAR(60)
+);
+
+-- create table issued_status
+create table issued_status
+(
+	issued_id VARCHAR(10) PRIMARY KEY,
+    issued_member_id VARCHAR(10),
+    issued_book_name VARCHAR(75),
+    issued_date DATE,
+	issued_book_isbn VARCHAR(25),
+    issued_emp_id VARCHAR(10)
+);
+
+-- create table return_status
+CREATE TABLE return_status
+(
+	return_id VARCHAR(10) PRIMARY KEY,
+    issued_id VARCHAR(10),
+    return_book_name VARCHAR(75),
+    return_date DATE,
+    return_book_isbn VARCHAR(20)
+);
+
+
+-- FOREIGN key
+ALTER TABLE issued_status
+ADD CONSTRAINT fk_members
+FOREIGN KEY (issued_member_id)
+REFERENCES members(member_id); 
+
+ALTER TABLE issued_status
+ADD CONSTRAINT fk_books
+FOREIGN KEY (issued_book_isbn)
+REFERENCES books(isbn); 
+
+ALTER TABLE issued_status
+ADD CONSTRAINT fk_employees
+FOREIGN KEY (issued_emp_id)
+REFERENCES employees(emp_id); 
+
+ALTER TABLE return_status
+ADD CONSTRAINT fk_issued_status
+FOREIGN KEY (issued_id)
+REFERENCES issued_status(issued_id); 
+
+ALTER TABLE employees
+ADD CONSTRAINT fk_branch
+FOREIGN KEY (branch_id)
+REFERENCES branch(branch_id); 
+```
+
+### 2. CRUD Operations
+
+- **Create**: Inserted sample records into the `books` table.
+- **Read**: Retvieved and displayed data from various tables.
+- **Update**: Updated records in the `employees` table.
+- **Delete**: Removed records from the `member table as needed.
+
+**Task 1: Create a New Book Record**-- "978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.')"
+
+```SQL
+INSERT INTO books(isbn, book_title, category, rental_price, status, author, publisher)
+VALUES
+('978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.');
+```
+
+**Task 2: Update an Existing Member's Address**
+
+```SQL
+UPDATE members
+SET member_address = '125 Oak St'
+WHERE member_id = 'C103';
+```
+
+**Task 3: Delete a Record from the Issued Status Table** -- Objective: Delete the record with issued_id = 'IS121' from the issued_status table.
+
+```SQL
+DELETE FROM issued_status
+WHERE issued_id = 'IS121';
+```
+
+**Task 4: Retrieve All Books Issued by a Spesific Employee** --Objective: Select all books issued by the employee with emp_id = 'E101'.
+
+```SQL
+SELECT * FROM issued_status
+WHERE issued_emp_id = 'E101';
+```
+
+**Task 5: List Members Who Have Issued More Than One Book**
+
+```SQL
+SELECT issued_emp_id, count(*)
+FROM issued_status
+GROUP BY 1
+HAVING count(*) > 1
+ORDER BY 2;
+```
+
+### 3. CTAS (Create Table As Select)
+
+**Task 6: Create Summary Tables**: Used CTAS to generate new tables based on query results - each book and total book_issued_cnt
+
+```SQL
+create table books_issued as
+select b.isbn, b.book_title, count(ist.issued_id) as issue_count
+from issued_status ist
+join books b on b.isbn = ist.issued_book_isbn
+group by 1,2;
+```
+
+### 4. Data Analysis & Findings
+The following SQL queries were used to address spesific questions:
+
+**Task 7: Retrieve All Books in a Spesific Category**:
+```SQL
+SELECT * FROM books
+WHERE category = 'Fantasy';
+```
+**Task 8: Find Total Rental Income by Category**:
+```SQL
+SELECT category, sum(rental_price)
+FROM books
+GROUP BY 1
+ORDER BY 2 DESC;
+```
+
+**Task 9: List Members Who Registered in the Last 1000 Days**:
+```SQL
+SELECT * FROM members
+WHERE reg_date >= CURRENT_DATE - INTERVAL 1000 DAY; 
+```
 
